@@ -105,15 +105,20 @@ export const nwsZonesPlugin = (): Plugin => {
           map: null,
         }
       } else {
-        const referenceId = this.emitFile({
-          type: 'asset',
-          name: 'nws-zones.json',
-          needsCodeReference: true,
-          source: JSON.stringify(zones, null, 2),
+        let code = ''
+        ;(Object.keys(zones) as Array<keyof typeof zones>).forEach((v: keyof typeof zones) => {
+          const referenceId = this.emitFile({
+            type: 'asset',
+            name: `nws-zones-${v}.json`,
+            needsCodeReference: true,
+            source: JSON.stringify(zones[v], null, 2),
+          })
+          code += `export const ${v} = import.meta.ROLLUP_FILE_URL_${referenceId};\n`
         })
+        code += `export default { ${Object.keys(zones).join(', ')} };`
 
         return {
-          code: `export default meta.props.ROLLUP_FILE_URL_${referenceId}`,
+          code,
           map: null,
         }
       }

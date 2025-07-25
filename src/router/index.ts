@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import { categories as nwsZoneCategories } from 'virtual:nws-zones'
+import { categories } from 'virtual:nws-zones'
 
 import HomeView from '../views/HomeView.vue'
 import AlertsView from '../views/AlertsView.vue'
@@ -15,7 +15,7 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/:category(' + nwsZoneCategories.join('|') + ')/:path',
+      path: '/:category(' + categories.join('|') + ')/:path',
       name: 'alerts',
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
@@ -23,7 +23,7 @@ const router = createRouter({
       component: AlertsView,
     },
     {
-      path: '/:category(' + nwsZoneCategories.join('|') + ')',
+      path: '/:category(' + categories.join('|') + ')',
       name: 'categories',
       component: CategoriesView,
     },

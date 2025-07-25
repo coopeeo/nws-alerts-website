@@ -109,7 +109,7 @@ export const nwsZonesPlugin = (): Plugin => {
         ;(Object.keys(zones) as Array<keyof typeof zones>).forEach((v: keyof typeof zones) => {
           const referenceId = this.emitFile({
             type: 'asset',
-            name: `nws-zones-${v}.json`,
+            name: `nws-zone-${v}.json`,
             needsCodeReference: true,
             source: JSON.stringify(zones[v], null, 2),
           })

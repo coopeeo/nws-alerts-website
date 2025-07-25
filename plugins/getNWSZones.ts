@@ -76,6 +76,7 @@ async function getNWSZones() {
 export const nwsZonesPlugin = (): Plugin => {
   const virtualModuleId = 'virtual:nws-zones'
   const resolvedVirtualModuleId = '\0' + virtualModuleId
+
   return {
     name: 'zones-handler',
     enforce: 'pre',
@@ -83,44 +84,43 @@ export const nwsZonesPlugin = (): Plugin => {
       if (id === virtualModuleId) {
         return resolvedVirtualModuleId
       }
+      if (id.startsWith('virtual:nws-zones/')) {
+        return '\0' + id
+      }
     },
     async load(id) {
-      if (id !== resolvedVirtualModuleId) return
+      if (id !== resolvedVirtualModuleId && !id.startsWith('\0virtual:nws-zones/')) return
+
       console.log('Loading NWS zones data...')
       const zones = await getNWSZones()
       console.log(
         'NWS zones data loaded successfully, total zones:',
         Object.keys(zones.zones).length,
       )
-      if (process.env.NODE_ENV === 'development') {
-        console.log('NWS zones data:', JSON.stringify(zones, null, 2))
-        return {
-          code:
-            (Object.keys(zones) as Array<keyof typeof zones>)
-              .map((v) => `export const ${v} = ${JSON.stringify(zones[v], null, 2)};`)
-              .join('\n') +
-            '\nexport default { ' +
-            Object.keys(zones).join(', ') +
-            ' };',
-          map: null,
-        }
-      } else {
-        let code = ''
-        ;(Object.keys(zones) as Array<keyof typeof zones>).forEach((v: keyof typeof zones) => {
-          const referenceId = this.emitFile({
-            type: 'asset',
-            name: `nws-zone-${v}.json`,
-            needsCodeReference: true,
-            source: JSON.stringify(zones[v]),
-          })
-          code += `export const ${v} = import(import.meta.ROLLUP_FILE_URL_${referenceId});\n`
-        })
-        code += `export default { ${Object.keys(zones).join(', ')} };`
 
-        return {
-          code,
-          map: null,
+      if (id.startsWith('\0virtual:nws-zones/')) {
+        const type = id.replace('\0virtual:nws-zones/', '')
+        if (type in zones) {
+          return {
+            code: `export default ${JSON.stringify(zones[type as keyof typeof zones])};`,
+            map: null,
+          }
         }
+        return
+      }
+
+      return {
+        code:
+          (Object.keys(zones) as Array<keyof typeof zones>)
+            .map((v) => `import ${String(v)} from "${virtualModuleId}/${v}";`)
+            .join('\n') +
+          '\nexport { ' +
+          Object.keys(zones).join(', ') +
+          ' };' +
+          '\nexport default { ' +
+          Object.keys(zones).join(', ') +
+          ' };',
+        map: null,
       }
     },
   }

@@ -24,6 +24,10 @@ export default defineConfig({
         manualChunks: {
           'vue-vendor': ['vue', 'vue-router'],
           'store-vendor': ['pinia'],
+          'nws-zones-path': ['virtual:nws-zones/path'],
+          'nws-zones-zones': ['virtual:nws-zones/zones'],
+          'nws-zones-names': ['virtual:nws-zones/names'],
+          'nws-zones-categories': ['virtual:nws-zones/categories'],
         },
         // Optimize chunk file naming for caching
         chunkFileNames: (chunkInfo) => {

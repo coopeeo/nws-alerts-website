@@ -110,8 +110,8 @@ export const nwsZonesPlugin = (): Plugin => {
           const referenceId = this.emitFile({
             type: 'asset',
             name: `nws-zone-${v}.json`,
-            needsCodeReference: true,
-            source: JSON.stringify(zones[v], null, 2),
+            needsCodeReference: false,
+            source: JSON.stringify(zones[v]),
           })
           code += `export const ${v} = import.meta.ROLLUP_FILE_URL_${referenceId};\n`
         })

@@ -1,37 +1,55 @@
 import { Plugin } from 'vite'
 
-let zonesCache: {
-  path: Record<string, any>
-  zones: Record<string, any>
-  names: Record<string, any>
-} | null = null
+interface NWSZone {
+  ids: string[]
+  name: string
+  state: string
+  path: string
+  category: string
+}
 
-function getNWSZones() {
-  if (zonesCache) return zonesCache
+const zonesCache = {
+  path: <Record<string, Record<string, NWSZone>>>{},
+  zones: <Record<string, NWSZone>>{},
+  names: <Record<string, NWSZone>>{},
+}
+
+const hasCached = false
+
+async function getNWSZones() {
+  if (hasCached) return zonesCache
   const checkIds: string[] = []
-  const zones: Record<string, any> = {}
-  zonesCache = { path: {}, zones: {}, names: {} }
-  fetch('https://api.weather.gov/zones/')
+  const zones: Record<string, NWSZone> = {}
+
+  await fetch('https://api.weather.gov/zones/', { headers: { 'User-Agent': 'NWS Alerts Website' } })
     .then((response) => {
       if (!response.ok) throw new Error('Failed to fetch NWS zones')
       return response.json()
     })
-    .then((data) => {
-      for (const zone of data.features) {
-        if (zone.id && !checkIds.includes(zone.id)) {
-          checkIds.push(zone.id)
-          if (!zones[(zone.name + ', ' + zone.state).toLowerCase()]) {
-            zones[(zone.name + ', ' + zone.state).toLowerCase()] = {
-              ids: [zone.id],
-              name: zone.name,
-              state: zone.state,
-              path: zone.name.toLowerCase().replace(/ /g, '-'),
-              category: zone.state != null ? zone.state.toLowerCase() : 'uncategorized',
+    .then((zoneData) => {
+      for (const zone of (
+        zoneData as { features: { properties: { id: string; name: string; state: string } }[] }
+      ).features) {
+        if (zone.properties.id && !checkIds.includes(zone.properties.id)) {
+          checkIds.push(zone.properties.id)
+          if (!zones[(zone.properties.name + ', ' + zone.properties.state).toLowerCase()]) {
+            zones[(zone.properties.name + ', ' + zone.properties.state).toLowerCase()] = {
+              ids: [zone.properties.id],
+              name: zone.properties.name,
+              state: zone.properties.state,
+              path: (zone.properties.name as string).toLowerCase().replace(/ /g, '-'),
+              category:
+                zone.properties.state != null
+                  ? zone.properties.state.toLowerCase()
+                  : 'uncategorized',
             }
           } else {
-            zones[(zone.name + ', ' + zone.state).toLowerCase()].ids.push(zone.id)
+            zones[(zone.properties.name + ', ' + zone.properties.state).toLowerCase()].ids.push(
+              zone.properties.id,
+            )
           }
-          zonesCache!.zones[zone.id] = zones[(zone.name + ', ' + zone.state).toLowerCase()]
+          zonesCache!.zones[zone.properties.id] =
+            zones[(zone.properties.name + ', ' + zone.properties.state).toLowerCase()]
         }
       }
 
@@ -41,8 +59,14 @@ function getNWSZones() {
             ? (zone.name + ', ' + zone.state).toLowerCase()
             : zone.name.toLowerCase()
         ] = zone
-        zonesCache!.path[zone.path] = [zone]
+        if (!zonesCache!.path[zone.category]) {
+          zonesCache!.path[zone.category] = {}
+        }
+        zonesCache!.path[zone.category][zone.path] = zone
       }
+    })
+    .catch((error) => {
+      console.error('Error fetching NWS zones:', error)
     })
   return zonesCache
 }
@@ -60,10 +84,30 @@ export const nwsZonesPlugin = (): Plugin => {
     },
     async load(id) {
       if (id !== resolvedVirtualModuleId) return
+      console.log('Loading NWS zones data...')
+      const zones = await getNWSZones()
+      console.log(
+        'NWS zones data loaded successfully, total zones:',
+        Object.keys(zones.zones).length,
+      )
+      if (process.env.NODE_ENV === 'development') {
+        console.log('NWS zones data:', JSON.stringify(zones, null, 2))
+        return {
+          code: `export default ${JSON.stringify(zones, null, 2)}`,
+          map: null,
+        }
+      } else {
+        const referenceId = this.emitFile({
+          type: 'asset',
+          name: 'nws-zones.json',
+          needsCodeReference: true,
+          source: JSON.stringify(zones, null, 2),
+        })
 
-      return {
-        code: `export default ${JSON.stringify(getNWSZones())}`,
-        map: null,
+        return {
+          code: `export default meta.props.ROLLUP_FILE_URL_${referenceId}`,
+          map: null,
+        }
       }
     },
   }

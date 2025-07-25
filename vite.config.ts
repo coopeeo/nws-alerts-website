@@ -4,10 +4,11 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { imageOptimizerPlugin } from './plugins/imageOptimizerPlugin'
+import { nwsZonesPlugin } from './plugins/getNWSZones'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueDevTools(), imageOptimizerPlugin()],
+  plugins: [vue(), vueDevTools(), imageOptimizerPlugin(), nwsZonesPlugin()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

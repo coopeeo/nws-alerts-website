@@ -3,26 +3,16 @@ import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <header>
+  <nav>
     <div class="wrapper">
       <img src="@/assets/logo.svg" alt="NWS Alerts Logo" class="logo" />
     </div>
-  </header>
+  </nav>
 
   <RouterView />
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
 nav {
   width: 100%;
   font-size: 12px;
@@ -57,12 +47,6 @@ nav a:first-of-type {
 
   .logo {
     margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
   }
 
   nav {

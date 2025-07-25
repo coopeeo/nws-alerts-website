@@ -294,11 +294,6 @@ const formatDate = (dateString: string) => {
         <h2>Coming Features</h2>
         <div class="features-grid">
           <div class="feature-card">
-            <div class="feature-icon">🔔</div>
-            <h3>Real-time Notifications</h3>
-            <p>Get instant alerts when new weather warnings are issued</p>
-          </div>
-          <div class="feature-card">
             <div class="feature-icon">📊</div>
             <h3>Alert History</h3>
             <p>View past weather events and alert patterns</p>
@@ -307,11 +302,6 @@ const formatDate = (dateString: string) => {
             <div class="feature-icon">🗺️</div>
             <h3>Interactive Maps</h3>
             <p>Visualize alert areas and affected regions</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">📱</div>
-            <h3>Mobile Optimized</h3>
-            <p>Access alerts on-the-go with our mobile interface</p>
           </div>
         </div>
       </div>

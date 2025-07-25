@@ -49,22 +49,22 @@ async function getNWSZones() {
               zone.properties.id,
             )
           }
-          zonesCache!.zones[zone.properties.id] =
+          zonesCache.zones[zone.properties.id] =
             zones[(zone.properties.name + ', ' + zone.properties.state).toLowerCase()]
         }
       }
 
       for (const zone of Object.values(zones)) {
-        zonesCache!.names[
+        zonesCache.names[
           zone.state != null
             ? (zone.name + ', ' + zone.state).toLowerCase()
             : zone.name.toLowerCase()
         ] = zone
-        if (!zonesCache!.path[zone.category]) {
-          zonesCache!.path[zone.category] = {}
-          zonesCache!.categories.push(zone.category)
+        if (!zonesCache.path[zone.category]) {
+          zonesCache.path[zone.category] = {}
+          zonesCache.categories.push(zone.category)
         }
-        zonesCache!.path[zone.category][zone.path] = zone
+        zonesCache.path[zone.category][zone.path] = zone
       }
     })
     .catch((error) => {

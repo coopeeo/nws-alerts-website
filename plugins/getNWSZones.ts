@@ -12,6 +12,7 @@ const zonesCache = {
   path: <Record<string, Record<string, NWSZone>>>{},
   zones: <Record<string, NWSZone>>{},
   names: <Record<string, NWSZone>>{},
+  categories: <string[]>[],
 }
 
 const hasCached = false
@@ -37,7 +38,7 @@ async function getNWSZones() {
               ids: [zone.properties.id],
               name: zone.properties.name,
               state: zone.properties.state,
-              path: (zone.properties.name as string).toLowerCase().replace(/ /g, '-'),
+              path: (zone.properties.name as string).toLowerCase().replace(/ |\/|\\/g, '-'),
               category:
                 zone.properties.state != null
                   ? zone.properties.state.toLowerCase()
@@ -61,6 +62,7 @@ async function getNWSZones() {
         ] = zone
         if (!zonesCache!.path[zone.category]) {
           zonesCache!.path[zone.category] = {}
+          zonesCache!.categories.push(zone.category)
         }
         zonesCache!.path[zone.category][zone.path] = zone
       }
@@ -93,7 +95,13 @@ export const nwsZonesPlugin = (): Plugin => {
       if (process.env.NODE_ENV === 'development') {
         console.log('NWS zones data:', JSON.stringify(zones, null, 2))
         return {
-          code: `export default ${JSON.stringify(zones, null, 2)}`,
+          code:
+            (Object.keys(zones) as Array<keyof typeof zones>)
+              .map((v) => `export const ${v} = ${JSON.stringify(zones[v], null, 2)};`)
+              .join('\n') +
+            '\nexport default { ' +
+            Object.keys(zones).join(', ') +
+            ' };',
           map: null,
         }
       } else {

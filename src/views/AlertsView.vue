@@ -16,37 +16,79 @@ const currentZone = computed(() => {
   )
 })
 
-const mockAlerts = ref([
-  {
-    id: 'ALERT001',
-    title: 'Winter Weather Advisory',
-    severity: 'Minor',
-    urgency: 'Expected',
-    event: 'Winter Weather Advisory',
-    headline: 'Winter Weather Advisory issued for the area',
-    description: 'Snow accumulations of 2 to 4 inches expected. Plan on slippery road conditions.',
-    instruction: 'Slow down and use caution while traveling.',
-    onset: '2025-01-15T18:00:00-05:00',
-    expires: '2025-01-16T06:00:00-05:00',
-    areas: ['Zone1', 'Zone2'],
-  },
-  {
-    id: 'ALERT002',
-    title: 'High Wind Warning',
-    severity: 'Moderate',
-    urgency: 'Immediate',
-    event: 'High Wind Warning',
-    headline: 'High Wind Warning in effect',
-    description: 'Southwest winds 25 to 35 mph with gusts up to 60 mph expected.',
-    instruction: 'People should avoid being outside in forested areas and around trees.',
-    onset: '2025-01-15T12:00:00-05:00',
-    expires: '2025-01-15T20:00:00-05:00',
-    areas: ['Zone1'],
-  },
-])
+interface Feature {
+  '@context'?: string[]
+  id?: string
+  type?: string
+  geometry?: {
+    type?: string
+    coordinates?: number[]
+    bbox?: number[]
+  }
+  properties?: {
+    id?: string
+    areaDesc?: string
+    geocode?: {
+      UGC?: string[]
+      SAME?: string[]
+    }
+    affectedZones?: string[]
+    references?: [
+      {
+        '@id'?: string
+        identifier: string
+        sender: string
+        sent: string
+      },
+    ]
+    sent?: string
+    effective?: string
+    onset?: string
+    expires?: string
+    ends?: string
+    status?: string
+    messageType?: string
+    category?: string
+    severity?: string
+    certainty?: string
+    urgency?: string
+    event?: string
+    sender?: string
+    senderName?: string
+    headline?: string
+    description?: string
+    instruction?: string
+    response?: string
+    parameters?: {
+      additionalProp1?: string[]
+      additionalProp2?: string[]
+      additionalProp3?: string[]
+    }
+    scope?: string
+    code?: string
+    language?: string
+    web?: string
+    eventCode?: {
+      additionalProp1?: string[]
+      additionalProp2?: string[]
+      additionalProp3?: string[]
+    }
+  }
+}
+
+const mockAlerts = ref<Feature[]>([])
 
 onMounted(() => {
-  // Simulate loading delay
+  fetch(`https://api.weather.gov/alerts/active?zone=${currentZone.value?.ids?.join(',')}`)
+    .then((response) => response.json())
+    .then((data) => {
+      mockAlerts.value = data.features || []
+      isLoading.value = false
+    })
+    .catch(() => {
+      isLoading.value = false
+      // Handle error (e.g., show a notification)
+    })
   setTimeout(() => {
     isLoading.value = false
   }, 1000)
@@ -152,8 +194,8 @@ const formatDate = (dateString: string) => {
           </div>
         </div>
         <div class="status-indicator">
-          <div class="status-dot active"></div>
-          <span class="status-text">Monitoring Active</span>
+          <div class="status-dot disabled"></div>
+          <span class="status-text">Live Updates Disabled</span>
         </div>
       </div>
     </div>
@@ -184,15 +226,12 @@ const formatDate = (dateString: string) => {
             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
           </svg>
           <div class="banner-text">
-            <h3>Real-time Alerts Coming Soon!</h3>
-            <p>
-              We're building live weather alert integration. Below is a preview of what's coming.
-            </p>
+            <h3>Real-time Updating Alerts Coming Soon!</h3>
+            <p>We're building live weather alert updatings without needing to do anything.</p>
           </div>
         </div>
       </div>
 
-      <!-- Mock Alerts Section -->
       <div class="alerts-section">
         <div class="section-header">
           <h2>
@@ -223,30 +262,30 @@ const formatDate = (dateString: string) => {
             v-for="alert in mockAlerts"
             :key="alert.id"
             class="alert-card"
-            :style="{ '--severity-color': getSeverityColor(alert.severity) }"
+            :style="{ '--severity-color': getSeverityColor(alert.properties!.severity!) }"
           >
             <div class="alert-header">
               <div class="alert-title">
-                <span class="urgency-icon">{{ getUrgencyIcon(alert.urgency) }}</span>
-                <h3>{{ alert.title }}</h3>
+                <span class="urgency-icon">{{ getUrgencyIcon(alert.properties!.urgency!) }}</span>
+                <h3>{{ alert.properties!.event }}</h3>
               </div>
               <div class="alert-badges">
                 <span
                   class="severity-badge"
-                  :style="{ backgroundColor: getSeverityColor(alert.severity) }"
+                  :style="{ backgroundColor: getSeverityColor(alert.properties!.severity!) }"
                 >
-                  {{ alert.severity }}
+                  {{ alert.properties!.severity! }}
                 </span>
-                <span class="urgency-badge">{{ alert.urgency }}</span>
+                <span class="urgency-badge">{{ alert.properties!.urgency! }}</span>
               </div>
             </div>
 
             <div class="alert-content">
-              <p class="alert-headline">{{ alert.headline }}</p>
-              <p class="alert-description">{{ alert.description }}</p>
+              <p class="alert-headline">{{ alert.properties!.headline! }}</p>
+              <p class="alert-description">{{ alert.properties!.description! }}</p>
 
-              <div class="alert-instruction" v-if="alert.instruction">
-                <strong>Instructions:</strong> {{ alert.instruction }}
+              <div class="alert-instruction" v-if="alert.properties!.instruction">
+                <strong>Instructions:</strong> {{ alert.properties!.instruction }}
               </div>
             </div>
 
@@ -254,11 +293,11 @@ const formatDate = (dateString: string) => {
               <div class="alert-timing">
                 <div class="timing-item">
                   <span class="timing-label">Effective:</span>
-                  <span class="timing-value">{{ formatDate(alert.onset) }}</span>
+                  <span class="timing-value">{{ formatDate(alert.properties!.onset!) }}</span>
                 </div>
                 <div class="timing-item">
                   <span class="timing-label">Expires:</span>
-                  <span class="timing-value">{{ formatDate(alert.expires) }}</span>
+                  <span class="timing-value">{{ formatDate(alert.properties!.expires!) }}</span>
                 </div>
               </div>
             </div>
@@ -287,23 +326,6 @@ const formatDate = (dateString: string) => {
         </svg>
         <h3>No Active Alerts</h3>
         <p>There are currently no weather alerts for this zone. Check back later for updates.</p>
-      </div>
-
-      <!-- Features Preview -->
-      <div class="features-preview">
-        <h2>Coming Features</h2>
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">📊</div>
-            <h3>Alert History</h3>
-            <p>View past weather events and alert patterns</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🗺️</div>
-            <h3>Interactive Maps</h3>
-            <p>Visualize alert areas and affected regions</p>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -409,6 +431,11 @@ const formatDate = (dateString: string) => {
   border-radius: 50%;
   background: #32cd32;
   animation: pulse 2s infinite;
+}
+
+.status-dot.disabled {
+  background: #eb0909;
+  animation: none;
 }
 
 @keyframes pulse {

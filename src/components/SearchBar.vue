@@ -11,7 +11,7 @@ interface NWSZone {
 }
 
 const searchQuery = ref('')
-const maxResults = ref(10)
+const maxResults = ref(100)
 const allZones = ref<NWSZone[]>([])
 
 onMounted(() => {
@@ -39,11 +39,7 @@ const filteredZones = computed(() => {
 })
 
 const handleSearch = () => {
-  if (filteredZones.value.length <= 5) {
-    maxResults.value = 20
-  } else {
-    maxResults.value = 10
-  }
+  return
 }
 
 const clearSearch = () => {
